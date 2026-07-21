@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mohamed Elaraby — AI & Full-Stack Engineer",
+  title: "Mohamed Elaraby — AI & Full-Stack & CS Engineer",
   description:
     "Cinematic 3D portfolio of Mohamed Ebrahim Elaraby — AI & LLM engineering, full-stack development, cybersecurity and backend engineering.",
   keywords: [
@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: "/p.ico",
+  },
+  openGraph: {
+    images: "/.og-image.jpeg",
   },
 };
 
