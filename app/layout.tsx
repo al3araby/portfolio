@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     icon: "/p.ico",
   },
   openGraph: {
-    images: "/.og-image.jpeg",
+    images: "/og-image.jpeg",
   },
 };
 
