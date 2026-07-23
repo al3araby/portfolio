@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw 3D / asset sources (large; only the built .glb is shipped)
+/public/models/*.obj
+/white_mesh.obj
+/crf/

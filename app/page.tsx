@@ -7,6 +7,7 @@ import Projects from "@/components/sections/Projects";
 import Certificates from "@/components/sections/Certificates";
 import Timeline from "@/components/sections/Timeline";
 import Footer from "@/components/sections/Footer";
+import RobotCompanion from "@/components/three/RobotCompanion";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Preloader />
       <ScrollProgress />
       <Navbar />
+      <RobotCompanion />
       <Hero />
       {/* content scrolls over the fixed 3D scene */}
       <div className="relative z-10 bg-linear-to-b from-transparent via-[#050810] via-[45vh] to-[#050810]">

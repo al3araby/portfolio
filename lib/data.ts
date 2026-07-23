@@ -115,6 +115,8 @@ export type Project = {
   highlights?: string[];
   featured?: boolean;
   icon: string;
+  /** optional cover image rendered behind the card content */
+  image?: string;
 };
 
 export const projects: Project[] = [
@@ -141,6 +143,7 @@ export const projects: Project[] = [
     ],
     featured: true,
     icon: "Waves",
+    image: "/projects/nilepi.jpeg",
   },
   {
     id: "mwasalat-ai",

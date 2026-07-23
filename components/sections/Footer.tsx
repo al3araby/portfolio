@@ -146,7 +146,7 @@ export default function Footer() {
           </div>
 
           <p className="font-mono text-[11px] text-zinc-600">
-            © {new Date().getFullYear()} · Built with Next.js, Three.js &amp; GSAP
+            © {new Date().getFullYear()} · {profile.name}
           </p>
 
           <button

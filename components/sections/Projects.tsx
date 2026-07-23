@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import {
   motion,
   useMotionTemplate,
@@ -80,6 +81,25 @@ function TiltCard({ p, index }: { p: Project; index: number }) {
             : ""
         }`}
       >
+        {/* cover image + dark scrim so the copy stays readable */}
+        {p.image && (
+          <div
+            aria-hidden
+            style={{ transform: "translateZ(0px)" }}
+            className="pointer-events-none absolute inset-0"
+          >
+            <Image
+              src={p.image}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 100vw, 60vw"
+              className="object-cover opacity-40 transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-[#050810] via-[#050810]/85 to-[#050810]/45" />
+            <div className="absolute inset-0 bg-linear-to-br from-cyan-950/30 via-transparent to-amber-950/20" />
+          </div>
+        )}
+
         {/* floating icon */}
         <div
           style={{ transform: "translateZ(40px)" }}
