@@ -1,18 +1,79 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Award, Calendar, BadgeCheck } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { certificates, type Certificate } from "@/lib/data";
 
-// 3D coverflow is client-only (WebGL) — never SSR it
-const CertCarousel = dynamic(() => import("@/components/three/CertCarousel"), {
-  ssr: false,
-  loading: () => <div className="h-115 w-full md:h-130" />,
-});
+/** A certificate hanging in a lit wooden/metal frame. */
+function FramedCert({
+  cert,
+  index,
+  onOpen,
+}: {
+  cert: Certificate;
+  index: number;
+  onOpen: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onOpen}
+      initial={{ opacity: 0, y: 40, rotate: index % 2 ? 1.5 : -1.5 }}
+      whileInView={{ opacity: 1, y: 0, rotate: index % 2 ? 0.8 : -0.8 }}
+      whileHover={{ rotate: 0, scale: 1.03, y: -6 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.6, delay: (index % 4) * 0.09 }}
+      className="group relative cursor-pointer text-left focus:outline-none"
+    >
+      {/* hanging string */}
+      <div className="absolute -top-5 left-1/2 h-5 w-px -translate-x-1/2 bg-linear-to-b from-transparent to-zinc-500/60" />
+
+      {/* frame */}
+      <motion.div
+        layoutId={`cert-${cert.id}`}
+        className="relative rounded-md bg-linear-to-br from-[#3f2f1e] via-[#5a4328] to-[#2e2216] p-2.5 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.85)] ring-1 ring-black/60 transition-shadow group-hover:shadow-[0_24px_55px_-10px_rgba(34,211,238,0.25)]"
+      >
+        <div className="rounded-sm bg-[#0c0f18] p-1.5 ring-1 ring-black/50">
+          {cert.image ? (
+            <div className="relative aspect-4/3 w-full overflow-hidden rounded-xs bg-white">
+              <Image
+                src={cert.image}
+                alt={cert.title}
+                fill
+                sizes="(max-width: 768px) 90vw, (max-width: 1200px) 45vw, 320px"
+                className="object-contain"
+              />
+            </div>
+          ) : (
+            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xs bg-linear-to-br from-zinc-900 to-zinc-800 text-zinc-400">
+              <Award className="h-10 w-10 text-amber-400/70" />
+              <span className="px-4 text-center font-mono text-[10px]">
+                {cert.issuer}
+              </span>
+            </div>
+          )}
+        </div>
+        {/* glass reflection */}
+        <div className="pointer-events-none absolute inset-2.5 bg-linear-to-tr from-transparent via-white/6 to-white/12" />
+        {/* spotlight from above */}
+        <div className="pointer-events-none absolute -top-2 left-1/2 h-16 w-3/4 -translate-x-1/2 rounded-full bg-cyan-100/10 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+      </motion.div>
+
+      {/* label plate */}
+      <div className="mx-auto mt-3 w-fit max-w-full rounded border border-white/10 bg-white/4 px-3 py-1.5 text-center backdrop-blur">
+        <p className="truncate text-xs font-medium text-zinc-200">
+          {cert.title}
+        </p>
+        <p className="font-mono text-[10px] text-zinc-500">
+          {cert.issuer} · {cert.date}
+        </p>
+      </div>
+    </motion.button>
+  );
+}
 
 export default function Certificates() {
   const [active, setActive] = useState<Certificate | null>(null);
@@ -41,10 +102,16 @@ export default function Certificates() {
           sub="Click any frame to take a closer look."
         />
 
-        <CertCarousel certificates={certificates} onOpen={setActive} />
-        <p className="mt-2 text-center font-mono text-[11px] tracking-widest text-zinc-500 uppercase">
-          Drag to spin · Click any certificate to zoom
-        </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+          {certificates.map((c, i) => (
+            <FramedCert
+              key={c.id}
+              cert={c}
+              index={i}
+              onOpen={() => setActive(c)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* ── zoom modal ── */}
