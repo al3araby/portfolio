@@ -252,6 +252,14 @@ export const certificates: Certificate[] = [
     image: "/certificates/hackerrank-sql.jpeg",
   },
   {
+    id: "hackerrank-python",
+    title: "Python (Basic)",
+    issuer: "HackerRank",
+    date: "Jul 20, 2026",
+    sortDate: "2026-07-20",
+    image: "/certificates/hackerrank-python.jpeg",
+  },
+  {
     id: "kaggle-intro-ml",
     title: "Intro to Machine Learning",
     issuer: "Kaggle",

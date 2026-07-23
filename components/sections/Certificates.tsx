@@ -38,7 +38,7 @@ function FramedCert({
       >
         <div className="rounded-sm bg-[#0c0f18] p-1.5 ring-1 ring-black/50">
           {cert.image ? (
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2px] bg-white">
+            <div className="relative aspect-4/3 w-full overflow-hidden rounded-xs bg-white">
               <Image
                 src={cert.image}
                 alt={cert.title}
@@ -48,7 +48,7 @@ function FramedCert({
               />
             </div>
           ) : (
-            <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-[2px] bg-linear-to-br from-zinc-900 to-zinc-800 text-zinc-400">
+            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xs bg-linear-to-br from-zinc-900 to-zinc-800 text-zinc-400">
               <Award className="h-10 w-10 text-amber-400/70" />
               <span className="px-4 text-center font-mono text-[10px]">
                 {cert.issuer}
@@ -57,7 +57,7 @@ function FramedCert({
           )}
         </div>
         {/* glass reflection */}
-        <div className="pointer-events-none absolute inset-2.5 bg-linear-to-tr from-transparent via-white/[0.06] to-white/[0.12]" />
+        <div className="pointer-events-none absolute inset-2.5 bg-linear-to-tr from-transparent via-white/6 to-white/12" />
         {/* spotlight from above */}
         <div className="pointer-events-none absolute -top-2 left-1/2 h-16 w-3/4 -translate-x-1/2 rounded-full bg-cyan-100/10 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       </motion.div>
@@ -135,7 +135,7 @@ export default function Certificates() {
             >
               <div className="rounded-sm bg-[#0c0f18] p-2 ring-1 ring-black/50">
                 {active.image ? (
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2px] bg-white md:aspect-[16/10]">
+                  <div className="relative aspect-4/3 w-full overflow-hidden rounded-xs bg-white md:aspect-16/10">
                     <Image
                       src={active.image}
                       alt={active.title}
@@ -146,7 +146,7 @@ export default function Certificates() {
                     />
                   </div>
                 ) : (
-                  <div className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-3 text-zinc-400">
+                  <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 text-zinc-400">
                     <Award className="h-16 w-16 text-amber-400/70" />
                     <span className="font-mono text-sm">{active.issuer}</span>
                   </div>
