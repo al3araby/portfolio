@@ -1,4 +1,5 @@
 import Preloader from "@/components/ui/Preloader";
+import ScrollProgress from "@/components/ui/ScrollProgress";
 import Navbar from "@/components/sections/Navbar";
 import Hero from "@/components/sections/Hero";
 import About from "@/components/sections/About";
@@ -11,10 +12,11 @@ export default function Home() {
   return (
     <main className="relative">
       <Preloader />
+      <ScrollProgress />
       <Navbar />
       <Hero />
       {/* content scrolls over the fixed 3D scene */}
-      <div className="relative z-10 bg-linear-to-b from-transparent via-[#050810]/95 via-6% to-[#050810]">
+      <div className="relative z-10 bg-linear-to-b from-transparent via-[#050810] via-[45vh] to-[#050810]">
         <About />
         <Projects />
         <Certificates />

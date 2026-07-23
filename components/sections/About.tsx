@@ -3,18 +3,27 @@
 import { motion } from "framer-motion";
 import { Bot, Code2, ShieldCheck, Database } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
+import Stats from "@/components/sections/Stats";
+import Aurora from "@/components/ui/Aurora";
+import Marquee from "@/components/ui/Marquee";
 import { expertise, skillGroups, profile } from "@/lib/data";
 
 const ICONS = { Bot, Code2, ShieldCheck, Database } as const;
 
+// flat, de-duplicated list of every skill for the marquee strip
+const allSkills = Array.from(new Set(skillGroups.flatMap((g) => g.skills)));
+
 export default function About() {
   return (
-    <section id="about" className="relative mx-auto max-w-6xl px-6 py-28">
+    <section id="about" className="relative isolate mx-auto max-w-6xl px-6 py-28">
+      <Aurora />
       <SectionTitle
         kicker="who am i"
         title="About & Expertise"
         sub={profile.about}
       />
+
+      <Stats />
 
       {/* expertise cards */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -65,6 +74,11 @@ export default function About() {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* infinite marquee of the full tech stack */}
+      <div className="mt-16">
+        <Marquee items={allSkills} />
       </div>
     </section>
   );

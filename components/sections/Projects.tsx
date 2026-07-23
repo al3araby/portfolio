@@ -3,10 +3,12 @@
 import { useRef } from "react";
 import {
   motion,
+  useMotionTemplate,
   useMotionValue,
   useSpring,
   useTransform,
 } from "framer-motion";
+import Aurora from "@/components/ui/Aurora";
 import {
   Waves,
   BrainCircuit,
@@ -42,6 +44,11 @@ function TiltCard({ p, index }: { p: Project; index: number }) {
     stiffness: 180,
     damping: 20,
   });
+
+  // cursor-following spotlight
+  const mxPct = useTransform(mx, [0, 1], ["0%", "100%"]);
+  const myPct = useTransform(my, [0, 1], ["0%", "100%"]);
+  const spotlight = useMotionTemplate`radial-gradient(280px circle at ${mxPct} ${myPct}, rgba(34,211,238,0.14), transparent 60%)`;
 
   const Icon = ICONS[p.icon as keyof typeof ICONS];
 
@@ -130,6 +137,13 @@ function TiltCard({ p, index }: { p: Project; index: number }) {
           ))}
         </div>
 
+        {/* cursor spotlight */}
+        <motion.div
+          aria-hidden
+          style={{ background: spotlight }}
+          className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        />
+
         {/* sheen */}
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
           <div className="absolute -inset-x-20 -top-40 h-56 rotate-12 bg-linear-to-b from-white/10 to-transparent blur-2xl" />
@@ -141,7 +155,8 @@ function TiltCard({ p, index }: { p: Project; index: number }) {
 
 export default function Projects() {
   return (
-    <section id="projects" className="relative mx-auto max-w-6xl px-6 py-28">
+    <section id="projects" className="relative isolate mx-auto max-w-6xl px-6 py-28">
+      <Aurora />
       <SectionTitle
         kicker="what i built"
         title="Featured Projects"

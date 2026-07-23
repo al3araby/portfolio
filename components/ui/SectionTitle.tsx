@@ -1,6 +1,40 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
+
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#@%&$<>/*0123456789";
+
+/** Reveals `text` with a decode/scramble flourish once `active` turns true. */
+function useScramble(text: string, active: boolean) {
+  const [out, setOut] = useState(text);
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    const start = performance.now();
+    const total = text.length;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / 850);
+      const revealed = Math.floor(p * total);
+      let s = "";
+      for (let i = 0; i < total; i++) {
+        if (text[i] === " ") {
+          s += " ";
+        } else if (i < revealed) {
+          s += text[i];
+        } else {
+          s += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        }
+      }
+      setOut(s);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else setOut(text);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, text]);
+  return out;
+}
 
 export default function SectionTitle({
   kicker,
@@ -11,8 +45,17 @@ export default function SectionTitle({
   title: string;
   sub?: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const scrambled = useScramble(title, inView);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [26, -26]);
+
   return (
-    <div className="mb-14 text-center">
+    <motion.div ref={ref} style={{ y }} className="mb-14 text-center">
       <motion.p
         initial={{ opacity: 0, y: 14, letterSpacing: "0.9em" }}
         whileInView={{ opacity: 1, y: 0, letterSpacing: "0.45em" }}
@@ -29,7 +72,7 @@ export default function SectionTitle({
         transition={{ duration: 0.8, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
         className="text-3xl font-bold tracking-tight text-white md:text-5xl"
       >
-        {title}
+        {scrambled}
       </motion.h2>
       {/* glowing divider draws itself in */}
       <motion.div
@@ -50,6 +93,6 @@ export default function SectionTitle({
           {sub}
         </motion.p>
       )}
-    </div>
+    </motion.div>
   );
 }

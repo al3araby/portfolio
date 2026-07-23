@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Mail, ArrowUp, Terminal } from "lucide-react";
+import Magnetic from "@/components/ui/Magnetic";
 import { profile } from "@/lib/data";
 
 // lucide-react dropped brand icons — inline SVGs instead
@@ -121,16 +122,17 @@ export default function Footer() {
             className="mt-10 flex items-center justify-center gap-4"
           >
             {socials.map(({ icon: Icon, href, label }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className="group rounded-2xl border border-white/10 bg-white/4 p-4 text-zinc-300 backdrop-blur transition-all hover:-translate-y-1 hover:border-cyan-400/50 hover:text-cyan-300 hover:shadow-[0_10px_35px_-10px_rgba(34,211,238,0.5)]"
-              >
-                <Icon className="h-5 w-5" />
-              </a>
+              <Magnetic key={label} strength={0.5} className="inline-block">
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="group block rounded-2xl border border-white/10 bg-white/4 p-4 text-zinc-300 backdrop-blur transition-all hover:border-cyan-400/50 hover:text-cyan-300 hover:shadow-[0_10px_35px_-10px_rgba(34,211,238,0.5)]"
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              </Magnetic>
             ))}
           </motion.div>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Terminal } from "lucide-react";
+import Magnetic from "@/components/ui/Magnetic";
 import { useSiteStore } from "@/store/useSiteStore";
 
 const links = [
@@ -56,7 +57,7 @@ export default function Navbar() {
                 <li key={l.href}>
                   <a
                     href={l.href}
-                    className={`relative rounded-full px-3.5 py-1.5 text-xs transition-colors ${
+                    className={`link-underline relative rounded-full px-3.5 py-1.5 text-xs transition-colors ${
                       active === l.href
                         ? "text-cyan-300"
                         : "text-zinc-400 hover:text-white"
@@ -74,19 +75,21 @@ export default function Navbar() {
                 </li>
               ))}
             </ul>
-            <a
-              href="#footer"
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({
-                  top: document.body.scrollHeight,
-                  behavior: "smooth",
-                });
-              }}
-              className="rounded-full bg-linear-to-r from-cyan-500 to-teal-400 px-4 py-1.5 text-xs font-semibold text-black transition-transform hover:scale-105"
-            >
-              Contact
-            </a>
+            <Magnetic strength={0.5} className="inline-block">
+              <a
+                href="#footer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: "smooth",
+                  });
+                }}
+                className="inline-block rounded-full bg-linear-to-r from-cyan-500 to-teal-400 px-4 py-1.5 text-xs font-semibold text-black transition-transform hover:scale-105"
+              >
+                Contact
+              </a>
+            </Magnetic>
           </nav>
         </motion.header>
       )}

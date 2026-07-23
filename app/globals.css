@@ -228,3 +228,97 @@ html.lenis body {
   opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
+
+/* ─── Ambient aurora blobs (decorative, per-section) ─────────────────────── */
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(110px);
+  opacity: 0.13;
+  will-change: transform;
+}
+.aurora-1 {
+  width: 38rem;
+  height: 38rem;
+  top: -12rem;
+  left: -10rem;
+  background: var(--cinema-cyan);
+  animation: aurora-a 20s ease-in-out infinite alternate;
+}
+.aurora-2 {
+  width: 30rem;
+  height: 30rem;
+  right: -8rem;
+  bottom: -12rem;
+  background: var(--cinema-amber);
+  animation: aurora-b 26s ease-in-out infinite alternate;
+}
+@keyframes aurora-a {
+  to {
+    transform: translate(7rem, 4rem) scale(1.2);
+  }
+}
+@keyframes aurora-b {
+  to {
+    transform: translate(-6rem, -4rem) scale(1.18);
+  }
+}
+
+/* ─── Infinite tech marquee ──────────────────────────────────────────────── */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  -webkit-mask: linear-gradient(
+    90deg,
+    transparent,
+    #000 10%,
+    #000 90%,
+    transparent
+  );
+  mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquee-track {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.75rem;
+  padding-right: 0.75rem;
+  animation: marquee 34s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* ─── Link underline reveal ──────────────────────────────────────────────── */
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 0.25rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+  opacity: 0.6;
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-1,
+  .aurora-2,
+  .marquee-track {
+    animation: none !important;
+  }
+}
