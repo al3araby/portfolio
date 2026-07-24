@@ -9,37 +9,35 @@ import { useSiteStore } from "@/store/useSiteStore";
 
 /**
  * Persistent 3D companion that overlays the whole page. It watches which
- * section is on screen and glides the robot to that section's anchor, and
- * turns to *look at* the pointer. On desktop it parks in the empty side
- * margins beside the copy. On phones there are no margins, so it lives in the
- * centre and only appears on the two sections that have room for it — the
- * hero (with the laptop) and the footer — retreating out of sight everywhere
- * else so it never sits over the body copy. Pointer-transparent; skipped for
+ * section is on screen, turns to *look at* the pointer, and only shows on the
+ * sections that have room for it — retreating out of sight everywhere else so
+ * it never sits over the body copy. On desktop it appears big on the hero and
+ * is gone from every other section; on phones there are no margins, so it
+ * lives centred in the footer only. The overlay is fixed to the viewport, so
+ * it never travels down with the scroll. Pointer-transparent; skipped for
  * reduced-motion. Mounts only once the cinematic intro has handed over.
  */
 
 // anchor = fraction of the viewport (width, height); scale in local units;
 // yaw = resting rotation (rad) so it turns to *look at* the content beside it.
-// |ax| ~0.37 parks the robot in the margin beside the max-w-6xl content.
 type Station = { ax: number; ay: number; scale: number; yaw: number };
+// Desktop: the big companion lives ONLY on the hero. Every other section is
+// absent from this table, so the rig reads that as "retreat / hide".
 const STATIONS: Record<string, Station> = {
   home: { ax: 0.31, ay: 0.03, scale: 0.78, yaw: 0 },
-  // pushed to the extreme edge; right margin → turn left toward the copy,
-  // left margin → turn right
-  about: { ax: 0.45, ay: -0.02, scale: 0.42, yaw: -0.4 },
-  projects: { ax: -0.45, ay: -0.02, scale: 0.42, yaw: 0.4 },
-  certificates: { ax: 0.45, ay: -0.02, scale: 0.42, yaw: -0.4 },
-  timeline: { ax: -0.45, ay: -0.02, scale: 0.42, yaw: 0.4 },
-  // footer: off to the far right, looking back at the copy
-  contact: { ax: 0.41, ay: -0.08, scale: 0.44, yaw: -0.4 },
 };
 
-// Phone layout: centred, and ONLY on the hero + footer. Any other section is
-// absent from this table, so the rig reads that as "retreat / hide".
+// Phone layout: centred, and ONLY in the footer. The hero and every other
+// section are absent, so the rig hides the robot there.
 const MOBILE_STATIONS: Record<string, Station> = {
-  home: { ax: 0, ay: 0.16, scale: 0.5, yaw: 0 },
   contact: { ax: 0, ay: -0.16, scale: 0.5, yaw: 0 },
 };
+
+// fallback anchors used only to ease the robot in/out of view while it is
+// hidden (no matching station) — it shrinks away at this spot rather than
+// flying across the page.
+const HIDDEN_HOME: Station = { ax: 0.31, ay: 0.03, scale: 0.78, yaw: 0 };
+const HIDDEN_HOME_MOBILE: Station = { ax: 0, ay: -0.16, scale: 0.5, yaw: 0 };
 
 function CompanionRig({
   stationRef,
@@ -59,10 +57,11 @@ function CompanionRig({
     const mobile = mobileRef.current;
     const table = mobile ? MOBILE_STATIONS : STATIONS;
     const st = table[stationRef.current];
-    // on phones the robot only lives on home + footer; anywhere it has no
-    // station it shrinks away to nothing rather than crowding the copy
-    const hidden = mobile && !st;
-    const target = st ?? (mobile ? MOBILE_STATIONS.home : STATIONS.home);
+    // the robot only lives on its designated section (desktop → hero,
+    // phone → footer); anywhere it has no station it shrinks away to nothing
+    // rather than crowding the copy
+    const hidden = !st;
+    const target = st ?? (mobile ? HIDDEN_HOME_MOBILE : HIDDEN_HOME);
 
     const tx = target.ax * viewport.width;
     const ty = target.ay * viewport.height;
