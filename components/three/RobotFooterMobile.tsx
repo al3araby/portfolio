@@ -9,13 +9,11 @@ import Robot from "./Robot";
 import { useSiteStore } from "@/store/useSiteStore";
 
 /**
- * The phone-only footer robot. Unlike the desktop companion (a fixed overlay),
- * this one is planted in the normal page flow between the timeline and the
- * footer, so it scrolls WITH the page instead of hovering over the viewport.
- * It fades / scales in once when it enters view, then simply sits there and
- * scrolls away like any other element — it never follows the scroll. Only
- * mounts on phones (the desktop overlay handles wide screens) and respects
- * reduced-motion.
+ * The phone-only footer robot. It is PINNED to a fixed spot on the screen and
+ * never moves with the scroll — it simply fades / scales in (a transition)
+ * once the footer comes into view and fades back out when it leaves. There is
+ * no position easing, so it stays rock-steady in place. Only mounts on phones
+ * (the desktop overlay handles wide screens) and respects reduced-motion.
  */
 
 function Rig() {
@@ -49,13 +47,14 @@ function Rig() {
 
 export default function RobotFooterMobile() {
   const introDone = useSiteStore((s) => s.introDone);
-  const [show, setShow] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [inView, setInView] = useState(false);
 
   // phones only, and skip for reduced-motion
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px)");
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setShow(!wide.matches && !calm.matches);
+    const update = () => setEnabled(!wide.matches && !calm.matches);
     update();
     wide.addEventListener("change", update);
     calm.addEventListener("change", update);
@@ -65,20 +64,34 @@ export default function RobotFooterMobile() {
     };
   }, []);
 
-  if (!introDone || !show) return null;
+  // show only while the footer is on screen — fade in/out, no movement
+  useEffect(() => {
+    if (!enabled || !introDone) return;
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const io = new IntersectionObserver(
+      ([e]) => setInView(e.isIntersecting && e.intersectionRatio >= 0.35),
+      { threshold: [0, 0.35, 0.6] },
+    );
+    io.observe(footer);
+    return () => io.disconnect();
+  }, [enabled, introDone]);
+
+  if (!introDone || !enabled) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.7, y: 40 }}
-      whileInView={{ opacity: 1, scale: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.5 }}
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      className="pointer-events-none relative z-10 mx-auto h-64 w-full"
+      initial={false}
+      animate={{ opacity: inView ? 1 : 0, scale: inView ? 1 : 0.8 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      // pinned to a fixed screen spot in the footer zone; never scrolls
+      className="pointer-events-none fixed inset-x-0 bottom-[28%] z-30 mx-auto h-60"
     >
       <Canvas
         dpr={[1, 1.5]}
         camera={{ position: [0, 0, 6], fov: 45 }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        style={{ pointerEvents: "none" }}
       >
         <ambientLight intensity={0.7} />
         <pointLight position={[3, 3, 4]} intensity={38} color="#67e8f9" />
