@@ -9,11 +9,13 @@ import { useSiteStore } from "@/store/useSiteStore";
 
 /**
  * Persistent 3D companion that overlays the whole page. It watches which
- * section is on screen and glides the robot to that section's anchor. The
- * canvas sits *above* the copy (z-40), so every station lives in the empty
- * side margins — never over centred text. Pointer-transparent; desktop-only
- * and skipped for reduced-motion so mobile stays light. Mounts only once the
- * cinematic intro has handed over.
+ * section is on screen and glides the robot to that section's anchor, and
+ * turns to *look at* the pointer. On desktop it parks in the empty side
+ * margins beside the copy. On phones there are no margins, so it lives in the
+ * centre and only appears on the two sections that have room for it — the
+ * hero (with the laptop) and the footer — retreating out of sight everywhere
+ * else so it never sits over the body copy. Pointer-transparent; skipped for
+ * reduced-motion. Mounts only once the cinematic intro has handed over.
  */
 
 // anchor = fraction of the viewport (width, height); scale in local units;
@@ -32,23 +34,53 @@ const STATIONS: Record<string, Station> = {
   contact: { ax: 0.41, ay: 0.05, scale: 0.44, yaw: -0.4 },
 };
 
-function CompanionRig({ stationRef }: { stationRef: React.RefObject<string> }) {
+// Phone layout: centred, and ONLY on the hero + footer. Any other section is
+// absent from this table, so the rig reads that as "retreat / hide".
+const MOBILE_STATIONS: Record<string, Station> = {
+  home: { ax: 0, ay: 0.16, scale: 0.5, yaw: 0 },
+  contact: { ax: 0, ay: 0.02, scale: 0.5, yaw: 0 },
+};
+
+function CompanionRig({
+  stationRef,
+  mobileRef,
+  pointerRef,
+}: {
+  stationRef: React.RefObject<string>;
+  mobileRef: React.RefObject<boolean>;
+  pointerRef: React.RefObject<{ x: number; y: number }>;
+}) {
   const group = useRef<THREE.Group>(null);
   const { viewport } = useThree();
-  const cur = useRef({ x: 0, y: 0, s: 0.01, yaw: 0 }); // start tiny → eases in
+  const cur = useRef({ x: 0, y: 0, s: 0.01, yaw: 0, pitch: 0 }); // start tiny → eases in
 
   useFrame((_, delta) => {
     if (!group.current) return;
-    const st = STATIONS[stationRef.current] ?? STATIONS.home;
-    const tx = st.ax * viewport.width;
-    const ty = st.ay * viewport.height;
+    const mobile = mobileRef.current;
+    const table = mobile ? MOBILE_STATIONS : STATIONS;
+    const st = table[stationRef.current];
+    // on phones the robot only lives on home + footer; anywhere it has no
+    // station it shrinks away to nothing rather than crowding the copy
+    const hidden = mobile && !st;
+    const target = st ?? (mobile ? MOBILE_STATIONS.home : STATIONS.home);
+
+    const tx = target.ax * viewport.width;
+    const ty = target.ay * viewport.height;
+    const ts = hidden ? 0.0001 : target.scale;
 
     // gentle, frame-rate-independent glide (higher base = softer easing)
     const k = 1 - Math.pow(0.02, delta);
     cur.current.x += (tx - cur.current.x) * k;
     cur.current.y += (ty - cur.current.y) * k;
-    cur.current.s += (st.scale - cur.current.s) * k;
-    cur.current.yaw += (st.yaw - cur.current.yaw) * k;
+    cur.current.s += (ts - cur.current.s) * k;
+
+    // look toward the pointer — a little head-turn (yaw) + nod (pitch) layered
+    // on top of the station's resting angle. Small so it stays subtle.
+    const p = pointerRef.current;
+    const desiredYaw = target.yaw + p.x * 0.5;
+    const desiredPitch = p.y * 0.3;
+    cur.current.yaw += (desiredYaw - cur.current.yaw) * k;
+    cur.current.pitch += (desiredPitch - cur.current.pitch) * k;
 
     // recede in depth while travelling far, so it floats "back" across the
     // page instead of ploughing straight through the middle of the copy
@@ -58,6 +90,9 @@ function CompanionRig({ stationRef }: { stationRef: React.RefObject<string> }) {
     group.current.position.set(cur.current.x, cur.current.y, z);
     group.current.scale.setScalar(cur.current.s);
     group.current.rotation.y = cur.current.yaw;
+    group.current.rotation.x = cur.current.pitch;
+    // skip drawing entirely once it has shrunk away on mobile
+    group.current.visible = cur.current.s > 0.02;
   });
 
   return (
@@ -70,13 +105,19 @@ function CompanionRig({ stationRef }: { stationRef: React.RefObject<string> }) {
 export default function RobotCompanion() {
   const introDone = useSiteStore((s) => s.introDone);
   const stationRef = useRef<string>("home");
+  const mobileRef = useRef(false);
+  const pointerRef = useRef({ x: 0, y: 0 });
   const [enabled, setEnabled] = useState(false);
 
-  // desktop-only + honour reduced-motion — keeps mobile light and calm
+  // honour reduced-motion (skip entirely); otherwise run on phones too, but
+  // track which layout table the rig should use
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px)");
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setEnabled(wide.matches && !calm.matches);
+    const update = () => {
+      mobileRef.current = !wide.matches;
+      setEnabled(!calm.matches);
+    };
     update();
     wide.addEventListener("change", update);
     calm.addEventListener("change", update);
@@ -85,6 +126,17 @@ export default function RobotCompanion() {
       calm.removeEventListener("change", update);
     };
   }, []);
+
+  // follow the cursor / touch as a normalised (-1..1) point
+  useEffect(() => {
+    if (!enabled) return;
+    const onMove = (e: PointerEvent) => {
+      pointerRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerRef.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [enabled]);
 
   // track the most-visible section and map it to a station key
   useEffect(() => {
@@ -136,7 +188,11 @@ export default function RobotCompanion() {
         <pointLight position={[3, 3, 4]} intensity={38} color="#67e8f9" />
         <pointLight position={[-3, -1, 3]} intensity={24} color="#fbbf24" />
         <Suspense fallback={null}>
-          <CompanionRig stationRef={stationRef} />
+          <CompanionRig
+            stationRef={stationRef}
+            mobileRef={mobileRef}
+            pointerRef={pointerRef}
+          />
           {/* procedural studio env — cheap reflections, no HDR download.
               cyan + gold + violet give the chrome its oil-slick colour range */}
           <Environment resolution={64} frames={1}>
