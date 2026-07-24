@@ -31,14 +31,14 @@ const STATIONS: Record<string, Station> = {
   certificates: { ax: 0.45, ay: -0.02, scale: 0.42, yaw: -0.4 },
   timeline: { ax: -0.45, ay: -0.02, scale: 0.42, yaw: 0.4 },
   // footer: off to the far right, looking back at the copy
-  contact: { ax: 0.41, ay: 0.05, scale: 0.44, yaw: -0.4 },
+  contact: { ax: 0.41, ay: -0.08, scale: 0.44, yaw: -0.4 },
 };
 
 // Phone layout: centred, and ONLY on the hero + footer. Any other section is
 // absent from this table, so the rig reads that as "retreat / hide".
 const MOBILE_STATIONS: Record<string, Station> = {
   home: { ax: 0, ay: 0.16, scale: 0.5, yaw: 0 },
-  contact: { ax: 0, ay: 0.02, scale: 0.5, yaw: 0 },
+  contact: { ax: 0, ay: -0.16, scale: 0.5, yaw: 0 },
 };
 
 function CompanionRig({
