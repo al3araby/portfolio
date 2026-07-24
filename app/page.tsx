@@ -8,6 +8,7 @@ import Certificates from "@/components/sections/Certificates";
 import Timeline from "@/components/sections/Timeline";
 import Footer from "@/components/sections/Footer";
 import RobotCompanion from "@/components/three/RobotCompanion";
+import RobotFooterMobile from "@/components/three/RobotFooterMobile";
 
 export default function Home() {
   return (
@@ -23,6 +24,9 @@ export default function Home() {
         <Projects />
         <Certificates />
         <Timeline />
+        {/* phone-only robot, planted between the timeline and footer so it
+            scrolls with the page instead of hovering over the viewport */}
+        <RobotFooterMobile />
         <Footer />
       </div>
     </main>

@@ -8,44 +8,34 @@ import Robot from "./Robot";
 import { useSiteStore } from "@/store/useSiteStore";
 
 /**
- * Persistent 3D companion that overlays the whole page. It watches which
- * section is on screen, turns to *look at* the pointer, and only shows on the
- * sections that have room for it — retreating out of sight everywhere else so
- * it never sits over the body copy. On desktop it appears big on the hero and
- * is gone from every other section; on phones there are no margins, so it
- * lives centred in the footer only. The overlay is fixed to the viewport, so
- * it never travels down with the scroll. Pointer-transparent; skipped for
- * reduced-motion. Mounts only once the cinematic intro has handed over.
+ * Persistent 3D companion that overlays the page on DESKTOP only. It shows the
+ * big robot on the hero and retreats out of sight on every other section, so
+ * it never sits over the body copy. Turns to *look at* the pointer. The
+ * overlay is fixed to the viewport but only ever visible on the hero, so it
+ * never travels down with the scroll. On phones this overlay does not mount at
+ * all — the footer robot is planted in the page flow instead (see
+ * RobotFooterMobile). Pointer-transparent; skipped for reduced-motion. Mounts
+ * only once the cinematic intro has handed over.
  */
 
 // anchor = fraction of the viewport (width, height); scale in local units;
 // yaw = resting rotation (rad) so it turns to *look at* the content beside it.
 type Station = { ax: number; ay: number; scale: number; yaw: number };
-// Desktop: the big companion lives ONLY on the hero. Every other section is
-// absent from this table, so the rig reads that as "retreat / hide".
+// The big companion lives ONLY on the hero. Every other section is absent from
+// this table, so the rig reads that as "retreat / hide".
 const STATIONS: Record<string, Station> = {
   home: { ax: 0.31, ay: 0.03, scale: 0.78, yaw: 0 },
 };
 
-// Phone layout: centred, and ONLY in the footer. The hero and every other
-// section are absent, so the rig hides the robot there.
-const MOBILE_STATIONS: Record<string, Station> = {
-  contact: { ax: 0, ay: -0.16, scale: 0.5, yaw: 0 },
-};
-
-// fallback anchors used only to ease the robot in/out of view while it is
-// hidden (no matching station) — it shrinks away at this spot rather than
-// flying across the page.
+// fallback anchor used only to ease the robot out of view while it is hidden
+// (no matching station) — it shrinks away at this spot rather than flying.
 const HIDDEN_HOME: Station = { ax: 0.31, ay: 0.03, scale: 0.78, yaw: 0 };
-const HIDDEN_HOME_MOBILE: Station = { ax: 0, ay: -0.16, scale: 0.5, yaw: 0 };
 
 function CompanionRig({
   stationRef,
-  mobileRef,
   pointerRef,
 }: {
   stationRef: React.RefObject<string>;
-  mobileRef: React.RefObject<boolean>;
   pointerRef: React.RefObject<{ x: number; y: number }>;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -54,14 +44,11 @@ function CompanionRig({
 
   useFrame((_, delta) => {
     if (!group.current) return;
-    const mobile = mobileRef.current;
-    const table = mobile ? MOBILE_STATIONS : STATIONS;
-    const st = table[stationRef.current];
-    // the robot only lives on its designated section (desktop → hero,
-    // phone → footer); anywhere it has no station it shrinks away to nothing
-    // rather than crowding the copy
+    const st = STATIONS[stationRef.current];
+    // the robot only lives on the hero; anywhere it has no station it shrinks
+    // away to nothing rather than crowding the copy
     const hidden = !st;
-    const target = st ?? (mobile ? HIDDEN_HOME_MOBILE : HIDDEN_HOME);
+    const target = st ?? HIDDEN_HOME;
 
     const tx = target.ax * viewport.width;
     const ty = target.ay * viewport.height;
@@ -90,7 +77,7 @@ function CompanionRig({
     group.current.scale.setScalar(cur.current.s);
     group.current.rotation.y = cur.current.yaw;
     group.current.rotation.x = cur.current.pitch;
-    // skip drawing entirely once it has shrunk away on mobile
+    // skip drawing entirely once it has shrunk away
     group.current.visible = cur.current.s > 0.02;
   });
 
@@ -104,19 +91,15 @@ function CompanionRig({
 export default function RobotCompanion() {
   const introDone = useSiteStore((s) => s.introDone);
   const stationRef = useRef<string>("home");
-  const mobileRef = useRef(false);
   const pointerRef = useRef({ x: 0, y: 0 });
   const [enabled, setEnabled] = useState(false);
 
-  // honour reduced-motion (skip entirely); otherwise run on phones too, but
-  // track which layout table the rig should use
+  // desktop only, and honour reduced-motion (skip entirely). On phones the
+  // footer robot is planted in the page flow (RobotFooterMobile) instead.
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px)");
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => {
-      mobileRef.current = !wide.matches;
-      setEnabled(!calm.matches);
-    };
+    const update = () => setEnabled(wide.matches && !calm.matches);
     update();
     wide.addEventListener("change", update);
     calm.addEventListener("change", update);
@@ -126,7 +109,7 @@ export default function RobotCompanion() {
     };
   }, []);
 
-  // follow the cursor / touch as a normalised (-1..1) point
+  // follow the cursor as a normalised (-1..1) point
   useEffect(() => {
     if (!enabled) return;
     const onMove = (e: PointerEvent) => {
@@ -187,11 +170,7 @@ export default function RobotCompanion() {
         <pointLight position={[3, 3, 4]} intensity={38} color="#67e8f9" />
         <pointLight position={[-3, -1, 3]} intensity={24} color="#fbbf24" />
         <Suspense fallback={null}>
-          <CompanionRig
-            stationRef={stationRef}
-            mobileRef={mobileRef}
-            pointerRef={pointerRef}
-          />
+          <CompanionRig stationRef={stationRef} pointerRef={pointerRef} />
           {/* procedural studio env — cheap reflections, no HDR download.
               cyan + gold + violet give the chrome its oil-slick colour range */}
           <Environment resolution={64} frames={1}>
