@@ -8,33 +8,34 @@ import * as THREE from "three";
 /** Optimised model — built from the raw OBJ by scripts/build-robot.mjs. */
 const MODEL_URL = "/models/robot.glb";
 /** Largest dimension the model is scaled to fit, in local units. */
-const TARGET_SIZE = 2.3;
+const TARGET_SIZE = 1.9;
 
 /**
  * The companion model, normalised and dressed. The decimated GLB ships no
  * normals (obj2gltf drops them) so we recompute smooth ones once, then give
- * it a colourful iridescent metal skin. Idle life (bob + hover tilt + slow
- * turntable) lives on an inner group so the parent rig can freely place and
- * scale it without fighting these transforms.
+ * it a vivid oil-slick iridescent chrome skin. Idle life is a gentle bob +
+ * micro-sway only — it never spins around, so it always reads as "standing"
+ * facing the viewer. Facing/placement is driven by the parent rig; these
+ * transforms live on an inner group so they compose cleanly.
  */
-export default function Robot({ spin = 0.25 }: { spin?: number }) {
+export default function Robot() {
   const idle = useRef<THREE.Group>(null);
   const { scene } = useGLTF(MODEL_URL);
 
   const model = useMemo(() => {
     const material = new THREE.MeshPhysicalMaterial({
-      color: "#9fb4cf", // cool steel-blue base
+      color: "#aeb9d6", // light cool base so the iridescence reads vivid
       metalness: 1.0,
-      roughness: 0.26,
-      clearcoat: 0.7,
-      clearcoatRoughness: 0.22,
-      // rainbow metallic sheen so it reads as coloured, not bare grey
+      roughness: 0.15, // shinier, cleaner reflections
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.15,
+      // wide oil-slick rainbow sheen — cyan → violet → gold
       iridescence: 1.0,
-      iridescenceIOR: 1.35,
-      iridescenceThicknessRange: [120, 520],
-      emissive: new THREE.Color("#0a2a4a"),
-      emissiveIntensity: 0.4,
-      envMapIntensity: 1.5,
+      iridescenceIOR: 1.4,
+      iridescenceThicknessRange: [140, 780],
+      emissive: new THREE.Color("#123a5e"),
+      emissiveIntensity: 0.3,
+      envMapIntensity: 1.8,
     });
 
     scene.traverse((child) => {
@@ -59,14 +60,15 @@ export default function Robot({ spin = 0.25 }: { spin?: number }) {
     return scene;
   }, [scene]);
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     if (!idle.current) return;
     const t = state.clock.elapsedTime;
     const g = idle.current;
-    g.rotation.y += delta * spin;
-    g.position.y = Math.sin(t * 1.3) * 0.06;
-    g.rotation.x = Math.sin(t * 0.9) * 0.05;
-    g.rotation.z = Math.sin(t * 0.7 + 1.2) * 0.04;
+    // gentle "alive" idle — bob + tiny sway/nod, NO full rotation
+    g.position.y = Math.sin(t * 1.1) * 0.05;
+    g.rotation.y = Math.sin(t * 0.5) * 0.06; // tiny look side-to-side
+    g.rotation.x = Math.sin(t * 0.8 + 1.0) * 0.03; // subtle nod
+    g.rotation.z = Math.sin(t * 0.6) * 0.035; // subtle sway
   });
 
   return (
